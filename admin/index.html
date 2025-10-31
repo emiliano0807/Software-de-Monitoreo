@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Admin</title>
+    <style>
+        body { font-family: sans-serif; display: flex; }
+        .panel { padding: 20px; border: 1px solid #ccc; margin: 10px; }
+        select { min-width: 250px; min-height: 150px; }
+        button { display: block; margin-top: 10px; }
+        .danger { background-color: #ffcccc; color: #a00; }
+    </style>
+</head>
+<body>
+    <div class="panel">
+        <h2>Clientes Conectados</h2>
+        <select id="client-list" size="10"></select>
+    </div>
+    
+    <div class="panel">
+        <h2>Acciones</h2>
+        <button id="btn-test">Enviar Prueba</button>
+        <button id="btn-shutdown" class="danger">Apagar PC Remota</button>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
