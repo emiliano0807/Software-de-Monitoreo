@@ -1,49 +1,152 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-g">
-    <title>Panel de Admin</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración Remota</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: sans-serif; display: flex; }
-        .panel { padding: 20px; border: 1px solid #ccc; margin: 10px; }
-        select { min-width: 250px; min-height: 150px; }
-        button { display: block; margin-top: 10px; }
-        .danger { background-color: #ffcccc; color: #a00; }
-        
-        /* --- NUEVO --- */
-        #chat-box {
-            width: 300px;
-            height: 200px;
-            border: 1px solid #999;
-            overflow-y: scroll;
-            padding: 5px;
-            background-color: #f9f9f9;
-            margin-bottom: 10px;
-        }
-        #chat-input { width: 220px; }
-        #chat-send { width: 70px; }
-        /* --- FIN NUEVO --- */
+        body { font-family: 'Inter', sans-serif; }
     </style>
 </head>
-<body>
-    <div class="panel">
-        <h2>Clientes Conectados</h2>
-        <select id="client-list" size="10"></select>
-    </div>
-    
-    <div class="panel">
-        <h2>Acciones</h2>
-        <button id="btn-test">Enviar Prueba</button>
-        <button id="btn-shutdown" class="danger">Apagar PC Remota</button>
-    </div>
+<body class="bg-gray-100 text-gray-900 flex h-screen">
 
-    <div class="panel">
-        <h2>Chat con Cliente</h2>
-        <div id="chat-box">
-            </div>
-        <input type="text" id="chat-input" placeholder="Escribe un mensaje..." />
-        <button id="chat-send">Enviar</button>
-    </div>
-    <script src="main.js"></script>
+    <!-- Sidebar de Clientes -->
+    <aside class="w-64 bg-white p-4 shadow-md">
+        <h2 class="text-xl font-bold mb-4">Clientes Conectados</h2>
+        <select id="client-list" size="10" class="w-full h-64 p-2 border rounded-lg bg-gray-50">
+            <!-- La lista de clientes (IPs) aparecerá aquí -->
+        </select>
+        <p class="text-sm text-gray-500 mt-2">Selecciona un cliente para interactuar.</p>
+
+        <div class="mt-6">
+            <h3 class="font-semibold mb-2">Acciones Rápidas</h3>
+            <button id="shutdown-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow transition-all">
+                Apagar PC Remota
+            </button>
+        </div>
+    </aside>
+
+    <!-- Área Principal de Chat -->
+    <main class="flex-1 flex flex-col p-4">
+        <h1 class="text-2xl font-bold mb-4">Chat y Comandos</h1>
+        
+        <!-- Log del Chat -->
+        <div class="flex-1 bg-white p-4 rounded-lg shadow-inner overflow-y-auto mb-4">
+            <pre id="chat-log" class="text-sm whitespace-pre-wrap"></pre>
+        </div>
+
+        <!-- Input de Chat -->
+        <div class="flex">
+            <input type="text" id="chat-message" class="flex-1 p-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Escribe un mensaje para el cliente...">
+            <button id="send-chat-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-r-lg shadow transition-all">
+                Enviar
+            </button>
+        </div>
+    </main>
+
+    <script>
+        // Conexión WebSocket al server.js (que corre en puerto 8080)
+        const ws = new WebSocket('ws://localhost:8080');
+
+        const clientList = document.getElementById('client-list');
+        const chatLog = document.getElementById('chat-log');
+        const chatMessage = document.getElementById('chat-message');
+        const sendChatBtn = document.getElementById('send-chat-btn');
+        const shutdownBtn = document.getElementById('shutdown-btn');
+
+        function logToChat(message, from = 'Sistema') {
+            const timestamp = new Date().toLocaleTimeString();
+            chatLog.textContent += `[${timestamp}] ${from}: ${message}\n`;
+            chatLog.scrollTop = chatLog.scrollHeight; // Auto-scroll
+        }
+
+        ws.onopen = () => {
+            logToChat('Conectado al servidor WebSocket (server.js).');
+        };
+
+        ws.onclose = () => {
+            logToChat('Desconectado del servidor WebSocket.');
+        };
+
+        ws.onerror = (err) => {
+            logToChat(`Error de WebSocket: ${err.message}`);
+        };
+
+        // Manejador de mensajes RECIBIDOS del servidor
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+
+            // 1. Actualizar la lista de clientes
+            if (data.type === 'client-list') {
+                logToChat(`Clientes actualizados: ${data.clients.join(', ') || 'ninguno'}`);
+                clientList.innerHTML = ''; // Limpiar lista
+                data.clients.forEach(clientAddr => {
+                    const option = document.createElement('option');
+                    option.value = clientAddr;
+                    option.textContent = clientAddr;
+                    clientList.appendChild(option);
+                });
+            }
+
+            // 2. Mostrar mensaje de chat RECIBIDO del cliente
+            if (data.type === 'chat-message') {
+                logToChat(data.message, `Cliente (${data.from})`);
+            }
+        };
+
+        // Función genérica para enviar comandos
+        function sendCommand(command) {
+            const selectedClient = clientList.value;
+            if (!selectedClient) {
+                alert('Por favor, selecciona un cliente de la lista primero.');
+                return;
+            }
+
+            const payload = {
+                action: 'send-command',
+                target: selectedClient,
+                command: command
+            };
+
+            ws.send(JSON.stringify(payload));
+        }
+
+        // --- Event Listeners de los Botones ---
+
+        // Enviar Chat
+        sendChatBtn.addEventListener('click', () => {
+            const message = chatMessage.value.trim();
+            if (!message) return;
+
+            const command = `CHAT:${message}`;
+            sendCommand(command);
+            logToChat(message, 'Admin (Tú)');
+            chatMessage.value = ''; // Limpiar input
+        });
+
+        // Enviar por Enter
+        chatMessage.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                sendChatBtn.click();
+            }
+        });
+
+        // Apagar PC
+        shutdownBtn.addEventListener('click', () => {
+            const selectedClient = clientList.value;
+            if (!selectedClient) {
+                alert('Por favor, selecciona un cliente de la lista primero.');
+                return;
+            }
+
+            if (confirm(`¿Estás seguro de que quieres apagar la PC ${selectedClient}?`)) {
+                logToChat(`Enviando comando SHUTDOWN a ${selectedClient}...`);
+                // Enviamos el comando genérico "SHUTDOWN"
+                sendCommand('SHUTDOWN'); 
+            }
+        });
+
+    </script>
 </body>
 </html>
