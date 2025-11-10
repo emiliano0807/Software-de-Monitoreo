@@ -8,6 +8,12 @@ const clientList = document.getElementById('client-list');
 const btnTest = document.getElementById('btn-test');
 const btnShutdown = document.getElementById('btn-shutdown');
 
+// --- NUEVO ---
+const chatBox = document.getElementById('chat-box');
+const chatInput = document.getElementById('chat-input');
+const btnChatSend = document.getElementById('chat-send');
+// --- FIN NUEVO ---
+
 ws.onopen = () => {
     console.log('Conectado al servidor WebSocket (Admin)');
 };
@@ -19,50 +25,99 @@ ws.onmessage = (event) => {
     // Si el servidor nos envía la lista de clientes
     if (data.type === 'client-list') {
         console.log('Lista de clientes actualizada:', data.clients);
-        
-        // Limpiamos la lista actual
-        clientList.innerHTML = '';
-        
-        // Volvemos a llenar la lista
-        data.clients.forEach(clientAddr => {
-            const option = document.createElement('option');
-            option.value = clientAddr;
-            option.textContent = clientAddr;
-            clientList.appendChild(option);
-        });
+        updateClientList(data.clients);
+    
+    // --- NUEVO ---
+    // Si el servidor nos reenvía un mensaje de chat DE UN CLIENTE
+    } else if (data.type === 'chat-message') {
+        appendChatMessage(`[${data.from}]: ${data.message}`);
     }
+    // --- FIN NUEVO ---
 };
 
 ws.onclose = () => {
     console.log('Desconectado del servidor WebSocket. Recarga la página.');
+    appendChatMessage("[Sistema]: Desconectado del servidor.");
 };
+
+function updateClientList(clients) {
+    // Guardamos el cliente que estaba seleccionado
+    const selectedClient = clientList.value; 
+    
+    clientList.innerHTML = ''; // Limpiamos la lista
+    
+    clients.forEach(clientAddr => {
+        const option = document.createElement('option');
+        option.value = clientAddr;
+        option.textContent = clientAddr;
+        clientList.appendChild(option);
+    });
+
+    // Intentamos volver a seleccionar el cliente que estaba
+    if (clients.includes(selectedClient)) {
+        clientList.value = selectedClient;
+    }
+}
+
+// --- NUEVO ---
+function appendChatMessage(message) {
+    chatBox.innerHTML += `<div>${message}</div>`;
+    // Auto-scroll al fondo
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+// --- FIN NUEVO ---
 
 // --- Lógica de los Botones ---
 
-function sendCommand(command) {
-    const selectedClient = clientList.value; // Obtiene el cliente seleccionado
+function getSelectedClient() {
+    const selectedClient = clientList.value;
     if (!selectedClient) {
         alert('Por favor, selecciona un cliente de la lista.');
-        return;
+        return null;
     }
+    return selectedClient;
+}
+
+function sendCommand(command) {
+    const targetClient = getSelectedClient();
+    if (!targetClient) return;
 
     if (command === 'SHUTDOWN') {
-        if (!confirm(`¿Seguro que quieres apagar la PC ${selectedClient}?`)) {
+        if (!confirm(`¿Seguro que quieres apagar la PC ${targetClient}?`)) {
             return;
         }
     }
     
-    // Construimos el mensaje JSON para el servidor
-    const message = {
+    ws.send(JSON.stringify({
         action: 'send-command',
-        target: selectedClient, // A quién va dirigido
-        command: command        // Qué comando enviar
-    };
-
-    // Enviamos el mensaje (como string) al servidor
-    ws.send(JSON.stringify(message));
+        target: targetClient,
+        command: command
+    }));
 }
 
 // Asignamos las funciones a los botones
 btnTest.onclick = () => sendCommand('TEST_COMMAND');
 btnShutdown.onclick = () => sendCommand('SHUTDOWN');
+
+// --- NUEVO ---
+// Lógica para enviar un mensaje de chat
+btnChatSend.onclick = () => {
+    const targetClient = getSelectedClient();
+    if (!targetClient) return;
+
+    const message = chatInput.value;
+    if (message.trim() === '') return;
+
+    // 1. Enviar el mensaje al servidor (para que lo reenvíe al cliente)
+    ws.send(JSON.stringify({
+        action: 'send-command',
+        target: targetClient,
+        // Usamos un prefijo 'CHAT:' para que el cliente sepa qué es
+        command: `CHAT:${message}` 
+    }));
+
+    // 2. Mostrar nuestro propio mensaje en la GUI
+    appendChatMessage(`[Admin]: ${message}`);
+    chatInput.value = ''; // Limpiar el input
+};
+// --- FIN NUEVO ---

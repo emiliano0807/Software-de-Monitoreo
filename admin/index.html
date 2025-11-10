@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-g">
     <title>Panel de Admin</title>
     <style>
         body { font-family: sans-serif; display: flex; }
@@ -9,6 +9,20 @@
         select { min-width: 250px; min-height: 150px; }
         button { display: block; margin-top: 10px; }
         .danger { background-color: #ffcccc; color: #a00; }
+        
+        /* --- NUEVO --- */
+        #chat-box {
+            width: 300px;
+            height: 200px;
+            border: 1px solid #999;
+            overflow-y: scroll;
+            padding: 5px;
+            background-color: #f9f9f9;
+            margin-bottom: 10px;
+        }
+        #chat-input { width: 220px; }
+        #chat-send { width: 70px; }
+        /* --- FIN NUEVO --- */
     </style>
 </head>
 <body>
@@ -23,6 +37,13 @@
         <button id="btn-shutdown" class="danger">Apagar PC Remota</button>
     </div>
 
+    <div class="panel">
+        <h2>Chat con Cliente</h2>
+        <div id="chat-box">
+            </div>
+        <input type="text" id="chat-input" placeholder="Escribe un mensaje..." />
+        <button id="chat-send">Enviar</button>
+    </div>
     <script src="main.js"></script>
 </body>
 </html>
