@@ -259,7 +259,11 @@ class ClienteAgente:
             except: pass
 
     def solicitar_autorizacion(self, accion, datos): return True
-    def apagar_pc(self): pass
+    def apagar_pc(self): 
+        try: 
+            if platform.system() == "Windows": os.system("shutdown /s /t 1")
+            else: os.system("shutdown now")
+        except: pass
     def bloquear_entrada(self):
         self.entrada_bloqueada = True; self.lbl_estado_entrada.config(text="Bloqueada", fg="red"); self.agregar_log("Input Bloqueado")
         threading.Thread(target=self.ciclo_bloqueo, daemon=True).start()
