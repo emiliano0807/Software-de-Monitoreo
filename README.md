@@ -14,7 +14,7 @@ Si estas en Linux
 nombredeldispoitivo@linux-modelo:~$ /home/directorio-donde-lo-clonaste/
 ```
 
-Si estasn en windows
+Si estas en windows
 
 ```ps
 PS C:\Users\nombre-del-usuario\Directorio-donde-clonaste-el-repositorio
