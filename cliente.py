@@ -354,4 +354,3 @@ if __name__ == "__main__":
     if not os.name == 'nt': 
         if os.geteuid() != 0: print("Ejecuta con 'sudo' para funciones de bloqueo.")
     root = tk.Tk(); app = ClienteAgente(root); root.mainloop()
->>>>>>> prueba
