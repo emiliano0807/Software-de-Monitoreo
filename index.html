@@ -12,61 +12,52 @@
         .btn-active-red { background-color: #dc2626 !important; border-color: #ef4444 !important; color: white !important; box-shadow: 0 0 10px rgba(220, 38, 38, 0.5); }
         .btn-active-green { background-color: #059669 !important; border-color: #10b981 !important; color: white !important; box-shadow: 0 0 10px rgba(5, 150, 105, 0.5); }
         .btn-dimmed { opacity: 0.4; }
-        
-        /* MODAL STYLES */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px); }
         .modal-content { background-color: #1e293b; margin: 15% auto; padding: 20px; border: 1px solid #475569; width: 400px; border-radius: 10px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5); animation: slideIn 0.3s ease-out; }
         @keyframes slideIn { from {transform: translateY(-50px); opacity: 0;} to {transform: translateY(0); opacity: 1;} }
         
+        /* TOAST DE ERROR */
+        .toast { visibility: hidden; min-width: 250px; background-color: #b91c1c; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 1001; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+        .toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 4.5s; }
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #475569; }
     </style>
 </head>
 <body class="text-gray-100 h-screen flex flex-col overflow-hidden">
 
-    <!-- MODAL DE SOLICITUD DE VIDEO -->
+    <!-- TOAST ERROR -->
+    <div id="errorToast" class="toast">Error: Permiso denegado</div>
+
     <div id="requestModal" class="modal">
         <div class="modal-content">
             <div class="mb-4">
-                <i class="fas fa-video text-4xl text-blue-500 mb-2"></i>
-                <h2 class="text-xl font-bold text-white">Solicitud de Transmisión</h2>
-                <p class="text-slate-400 text-sm mt-2">El cliente <br><strong id="requestClientName" class="text-blue-400 text-lg">...</strong><br> quiere mostrar su pantalla.</p>
+                <i class="fas fa-desktop text-4xl text-purple-500 mb-2"></i>
+                <h2 class="text-xl font-bold text-white">Solicitud de Visualización</h2>
+                <p class="text-slate-400 text-sm mt-2">El cliente <br><strong id="requestClientName" class="text-purple-400 text-lg">...</strong><br> quiere ver TU pantalla.</p>
             </div>
             <div class="flex justify-center gap-4 mt-6">
                 <button onclick="rejectRequest()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition">Rechazar</button>
-                <button onclick="acceptRequest()" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg shadow-lg shadow-blue-500/30 transition animate-pulse">ACEPTAR</button>
+                <button onclick="acceptRequest()" class="px-6 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-lg shadow-lg transition animate-pulse">ACEPTAR</button>
             </div>
         </div>
     </div>
 
-    <!-- Header -->
     <header class="bg-slate-900 border-b border-slate-700 p-4 flex justify-between items-center shadow-lg z-10">
         <div class="flex items-center gap-3">
-            <div class="bg-blue-600 p-2 rounded-lg">
-                <i class="fas fa-network-wired text-white"></i>
-            </div>
-            <div>
-                <h1 class="font-bold text-lg leading-tight">Admin Remoto <span class="text-blue-500">v3.0</span></h1>
-                <p class="text-xs text-slate-400">Panel de Control Centralizado</p>
-            </div>
+            <div class="bg-blue-600 p-2 rounded-lg"><i class="fas fa-network-wired text-white"></i></div>
+            <div><h1 class="font-bold text-lg">Admin Remoto <span class="text-blue-500">v3.0</span></h1><p class="text-xs text-slate-400">Panel Centralizado</p></div>
         </div>
-
         <div class="flex items-center gap-4 bg-slate-800 px-4 py-2 rounded-full border border-slate-700">
-            <div id="connection-status" class="flex items-center gap-2 text-red-500 font-bold text-sm">
-                <div id="status-dot" class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
-                <span>Desconectado</span>
-            </div>
-            <div class="h-4 w-px bg-slate-600"></div>
+            <div id="connection-status" class="flex items-center gap-2 text-red-500 font-bold text-sm"><span>Desconectado</span></div>
             <input type="text" id="ws-url" value="ws://localhost:8080" class="bg-transparent border-none focus:ring-0 text-sm w-40 text-slate-300 placeholder-slate-500" placeholder="ws://...">
-            <button id="btn-connect" onclick="toggleConnection()" class="text-blue-400 hover:text-blue-300 font-bold text-sm uppercase tracking-wider transition-colors">
-                Conectar
-            </button>
+            <button id="btn-connect" onclick="toggleConnection()" class="text-blue-400 hover:text-blue-300 font-bold text-sm uppercase tracking-wider transition-colors">Conectar</button>
         </div>
     </header>
 
-    <!-- Main Layout -->
     <div class="flex-1 flex overflow-hidden">
         <aside class="w-64 bg-slate-900 border-r border-slate-700 flex flex-col">
             <div class="p-4 border-b border-slate-700">
@@ -106,40 +97,37 @@
         </aside>
 
         <main class="flex-1 flex flex-col bg-black relative">
-            <div class="absolute top-4 left-4 right-4 flex justify-between items-start z-20 pointer-events-none">
-                <div class="bg-black/70 backdrop-blur px-3 py-1 rounded text-xs font-mono text-green-400 border border-green-900 pointer-events-auto">
-                    <span id="fps-counter">0 FPS</span> • LIVE
+            <div class="absolute top-4 left-4 right-4 flex justify-between items-start z-20">
+                <div class="flex gap-2">
+                    <button id="btn-stream" onclick="toggleStreaming()" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-full font-bold shadow-lg flex items-center gap-2 text-xs">
+                        <i class="fas fa-play"></i> <span>VER CLIENTE</span>
+                    </button>
+                    <button id="btn-share-screen" onclick="toggleServerStreaming()" class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-full font-bold shadow-lg flex items-center gap-2 text-xs">
+                        <i class="fas fa-broadcast-tower"></i> <span>TRANSMITIR MI PANTALLA</span>
+                    </button>
                 </div>
-                <button id="btn-stream" onclick="toggleStreaming()" class="pointer-events-auto bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded-full font-bold shadow-lg flex items-center gap-2 transition-all">
-                    <i class="fas fa-play"></i> <span>INICIAR VIDEO</span>
-                </button>
+                <span id="fps-counter" class="bg-black/70 px-3 py-1 rounded text-xs font-mono text-green-400">0 FPS</span>
             </div>
             <div class="flex-1 flex items-center justify-center overflow-hidden bg-slate-950">
-                <div id="placeholder-screen" class="text-center text-slate-600 transition-all duration-300">
-                    <i class="fas fa-satellite-dish text-6xl mb-4 opacity-30 animate-pulse"></i>
-                    <p id="placeholder-text" class="text-xl font-light tracking-wide">Esperando transmisión</p>
-                    <div id="loading-indicator" class="hidden mt-2"><span class="text-xs text-blue-400 animate-pulse">Conectando...</span></div>
-                </div>
-                <img id="remote-screen" class="hidden w-full h-full object-contain" alt="Pantalla Remota" />
+                <div id="placeholder-screen" class="text-center text-slate-600"><i class="fas fa-satellite-dish text-6xl mb-4 opacity-30 animate-pulse"></i><p id="placeholder-text">Esperando transmisión</p></div>
+                <img id="remote-screen" class="hidden w-full h-full object-contain" />
             </div>
         </main>
 
         <aside class="w-80 bg-slate-900 border-l border-slate-700 flex flex-col">
             <div class="h-1/2 flex flex-col border-b border-slate-700">
-                <div class="p-3 bg-slate-800 border-b border-slate-700 font-bold text-xs text-slate-300 uppercase"><i class="fas fa-comments"></i> Chat Remoto</div>
-                <div id="chat-history" class="flex-1 overflow-y-auto p-3 space-y-2 text-sm bg-slate-900"><div class="text-slate-500 text-center text-xs italic">Chat vacío</div></div>
-                <div class="p-3 bg-slate-800">
-                    <div class="flex gap-2 items-center">
-                        <label for="file-upload" class="cursor-pointer bg-blue-600 hover:bg-blue-500 text-white p-2 rounded transition-colors flex items-center justify-center h-8 w-10"><i class="fas fa-paperclip"></i></label>
-                        <input id="file-upload" type="file" class="hidden" onchange="sendFile()">
-                        <input type="text" id="chat-msg" class="flex-1 bg-white border border-gray-300 rounded px-3 py-1.5 text-xs text-black placeholder-gray-500 focus:outline-none" placeholder="Mensaje...">
-                        <button onclick="sendChat()" class="bg-blue-600 hover:bg-blue-500 text-white p-2 rounded transition-colors h-8 w-10 flex items-center justify-center"><i class="fas fa-paper-plane"></i></button>
-                    </div>
+                <div class="p-3 bg-slate-800 border-b border-slate-700 font-bold text-xs text-slate-300">Chat Remoto</div>
+                <div id="chat-history" class="flex-1 overflow-y-auto p-3 space-y-2 text-sm bg-slate-900"></div>
+                <div class="p-3 bg-slate-800 flex gap-2">
+                    <label for="file-upload" class="cursor-pointer bg-blue-600 text-white p-2 rounded h-8 w-10 flex justify-center items-center"><i class="fas fa-paperclip"></i></label>
+                    <input id="file-upload" type="file" class="hidden" onchange="sendFile()">
+                    <input type="text" id="chat-msg" class="flex-1 bg-white rounded px-3 py-1 text-xs text-black" placeholder="Mensaje...">
+                    <button onclick="sendChat()" class="bg-blue-600 text-white p-2 rounded h-8 w-10 flex justify-center items-center"><i class="fas fa-paper-plane"></i></button>
                 </div>
             </div>
             <div class="h-1/2 flex flex-col">
-                <div class="p-3 bg-slate-800 border-b border-slate-700 font-bold text-xs text-slate-300 uppercase"><i class="fas fa-terminal"></i> Logs del Sistema</div>
-                <div id="logs" class="flex-1 log-terminal p-3 overflow-y-auto"><div class="text-slate-500">> Sistema listo.</div></div>
+                <div class="p-3 bg-slate-800 border-b border-slate-700 font-bold text-xs text-slate-300">Logs</div>
+                <div id="logs" class="flex-1 log-terminal p-3 overflow-y-auto"></div>
             </div>
         </aside>
     </div>
@@ -147,55 +135,54 @@
     <script>
         let ws;
         let isStreaming = false;
+        let isServerStreaming = false; 
         let lastFrameTime = Date.now();
         let clientStates = {};
-        let pendingRequestClientId = null; // Variable para almacenar quién pide permiso
+        let pendingRequestClientId = null;
 
-        function toggleConnection() { if (ws && (ws.readyState === 1 || ws.readyState === 0)) ws.close(); else connectWebSocket(); }
+        function toggleConnection() { if (ws && ws.readyState===1) ws.close(); else connectWebSocket(); }
         function connectWebSocket() {
-            const url = document.getElementById('ws-url').value;
-            log("Sistema", "Conectando a " + url + "...");
-            ws = new WebSocket(url);
-            ws.onopen = () => { updateStatus(true); log("Sistema", "Conexión establecida."); };
-            ws.onclose = () => { updateStatus(false); log("Sistema", "Desconectado."); stopStreamingUI(); };
-            ws.onerror = (err) => log("Error", "Error en WebSocket.");
-            ws.onmessage = (event) => { try { handleMessage(JSON.parse(event.data)); } catch (e) {} };
+            ws = new WebSocket(document.getElementById('ws-url').value);
+            ws.onopen = () => updateStatus(true);
+            ws.onclose = () => updateStatus(false);
+            ws.onmessage = (e) => handleMessage(JSON.parse(e.data));
         }
-
+        
         function handleMessage(data) {
             switch(data.type) {
                 case 'log': log("Servidor", data.message); break;
                 case 'client-list': updateClientList(data.clients); break;
                 case 'chat-message': addChatMessage(data.from, data.message); break;
-                case 'authorization-response': 
-                    const c = data.authorized ? 'text-green-400' : 'text-red-400';
-                    log("Auth", `<span class="${c}">${data.client}: ${data.message}</span>`);
-                    break;
-                case 'screenshot-data':
-                    const selected = getSelectedClient();
-                    if (selected && data.client === selected) updateScreen(data.image);
-                    break;
-                case 'client-disconnected':
+                case 'screenshot-data': { if(data.client === getSelectedClient()) updateScreen(data.image); break; }
+                case 'client-file': { downloadFile(data.name, data.data); log("Sistema", `Archivo: ${data.name}`); break; }
+                case 'admin-view-request': showRequestModal(data.client, data.name); break;
+                case 'server-stream-stopped': { resetServerStreamButton(); log("Video", "Transmisión de Admin finalizada."); break; }
+                case 'client-disconnected': { 
                     log("Sistema", `<span class="text-red-500">Desconectado: ${data.client}</span>`);
                     if (getSelectedClient() === data.client) {
                         stopStreamingUI();
                         document.getElementById('placeholder-text').textContent = "Cliente desconectado";
                     }
-                    break;
-                case 'client-file':
-                    downloadFile(data.name, data.data);
-                    log("Sistema", `Archivo recibido de ${data.client}: ${data.name}`);
-                    addChatMessage(data.client, `📎 Envió archivo: ${data.name}`);
-                    break;
+                    break; 
+                }
                 
-                // NUEVO: RECIBIR PETICIÓN DE STREAM
-                case 'stream-request':
-                    showRequestModal(data.client, data.name);
+                // NUEVO: PERMISO DENEGADO
+                case 'client-permission-denied':
+                    showErrorToast(`⚠️ PERMISO DENEGADO: ${data.action} en ${data.name}`);
+                    // Si el usuario intentó una acción, revertimos los botones visualmente
+                    renderClientState(); 
                     break;
             }
         }
+        
+        // FUNCIÓN TOAST
+        function showErrorToast(msg) {
+            const t = document.getElementById("errorToast");
+            t.textContent = msg;
+            t.className = "toast show";
+            setTimeout(function(){ t.className = t.className.replace("show", ""); }, 5000);
+        }
 
-        // --- FUNCIONES DEL MODAL ---
         function showRequestModal(clientId, clientName) {
             pendingRequestClientId = clientId;
             document.getElementById('requestClientName').textContent = clientName;
@@ -204,90 +191,117 @@
 
         function rejectRequest() {
             document.getElementById('requestModal').style.display = "none";
-            log("Sistema", "Solicitud de video rechazada.");
+            log("Sistema", "Solicitud rechazada.");
             pendingRequestClientId = null;
         }
 
         function acceptRequest() {
             if (!pendingRequestClientId) return;
-            
-            // 1. Seleccionar automáticamente al cliente en la lista
-            const select = document.getElementById('client-select');
-            select.value = pendingRequestClientId;
-            
-            // 2. Actualizar UI
+            document.getElementById('client-select').value = pendingRequestClientId;
             onClientChange();
             document.getElementById('requestModal').style.display = "none";
-            
-            // 3. Iniciar transmisión automáticamente
-            setTimeout(() => {
-                if (!isStreaming) {
-                    toggleStreaming(); // Esto envía START_STREAM
-                }
-            }, 300);
-            
-            log("Sistema", "Solicitud aceptada. Iniciando video...");
+            setTimeout(() => { if (!isServerStreaming) toggleServerStreaming(); }, 300);
+            log("Sistema", "Solicitud aceptada. Transmitiendo tu pantalla...");
             pendingRequestClientId = null;
         }
 
-        function toggleStreaming() {
-            if (!getSelectedClient()) return alert("¡Primero selecciona un cliente!");
-            const btn = document.getElementById('btn-stream');
+        function toggleServerStreaming() {
+            const target = getSelectedClient();
+            if (!target) return alert("Selecciona a quién transmitirle.");
+            const btn = document.getElementById('btn-share-screen');
             const icon = btn.querySelector('i');
             const text = btn.querySelector('span');
 
-            if (!isStreaming) {
-                isStreaming = true;
-                sendCommand('START_STREAM');
-                btn.className = "pointer-events-auto bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded-full font-bold shadow-lg flex items-center gap-2 transition-all";
-                icon.className = "fas fa-stop";
-                text.textContent = "DETENER VIDEO";
-                document.getElementById('loading-indicator').classList.remove('hidden');
-                document.getElementById('placeholder-text').textContent = "Solicitando video...";
+            if (!isServerStreaming) {
+                isServerStreaming = true;
+                ws.send(JSON.stringify({ action: 'start-server-stream', target: target }));
+                btn.classList.replace('bg-purple-600', 'bg-red-600');
+                icon.classList.replace('fa-broadcast-tower', 'fa-stop-circle');
+                text.textContent = "DETENER MI TRANSMISIÓN";
             } else {
-                sendCommand('STOP_STREAM');
-                stopStreamingUI();
+                isServerStreaming = false;
+                ws.send(JSON.stringify({ action: 'stop-server-stream' }));
+                resetServerStreamButton();
             }
         }
-
-        function stopStreamingUI() {
-            isStreaming = false;
-            const btn = document.getElementById('btn-stream');
-            if(!btn) return;
-            btn.className = "pointer-events-auto bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded-full font-bold shadow-lg flex items-center gap-2 transition-all";
-            btn.querySelector('i').className = "fas fa-play";
-            btn.querySelector('span').textContent = "INICIAR VIDEO";
-            document.getElementById('fps-counter').textContent = "0 FPS";
-            const img = document.getElementById('remote-screen');
-            img.classList.add('hidden'); img.src = ""; 
-            document.getElementById('placeholder-screen').classList.remove('hidden');
-            document.getElementById('loading-indicator').classList.add('hidden');
-            document.getElementById('placeholder-text').textContent = "Esperando transmisión";
+        
+        function resetServerStreamButton() {
+            isServerStreaming = false;
+            const btn = document.getElementById('btn-share-screen');
+            const icon = btn.querySelector('i');
+            const text = btn.querySelector('span');
+            btn.classList.replace('bg-red-600', 'bg-purple-600');
+            icon.classList.replace('fa-stop-circle', 'fa-broadcast-tower');
+            text.textContent = "TRANSMITIR MI PANTALLA";
         }
 
-        // ... Resto de funciones (updateScreen, updateClientList, etc.) sin cambios ...
-        function updateScreen(base64Data) { if (!isStreaming) return; const img = document.getElementById('remote-screen'); if (img.classList.contains('hidden')) { img.classList.remove('hidden'); document.getElementById('placeholder-screen').classList.add('hidden'); } img.src = "data:image/jpeg;base64," + base64Data; const now = Date.now(); const delta = now - lastFrameTime; if (delta > 0) document.getElementById('fps-counter').textContent = Math.round(1000 / delta) + " FPS"; lastFrameTime = now; }
-        function updateStatus(connected) { const statusDiv = document.getElementById('connection-status'); const dot = document.getElementById('status-dot'); const text = statusDiv.querySelector('span'); const btn = document.getElementById('btn-connect'); if (connected) { statusDiv.className = "flex items-center gap-2 text-emerald-500 font-bold text-sm"; dot.className = "w-3 h-3 rounded-full bg-emerald-500"; text.textContent = "Conectado"; btn.textContent = "DESCONECTAR"; btn.className = "text-red-400 hover:text-red-300 font-bold text-sm uppercase tracking-wider transition-colors"; } else { statusDiv.className = "flex items-center gap-2 text-red-500 font-bold text-sm"; dot.className = "w-3 h-3 rounded-full bg-red-500 animate-pulse"; text.textContent = "Desconectado"; btn.textContent = "CONECTAR"; btn.className = "text-blue-400 hover:text-blue-300 font-bold text-sm uppercase tracking-wider transition-colors"; } }
-        function updateClientList(clients) { const select = document.getElementById('client-select'); const currentVal = select.value; select.innerHTML = '<option value="">-- Seleccionar Cliente --</option>'; clients.forEach(client => { const option = document.createElement('option'); if (typeof client === 'object' && client !== null) { option.value = client.id; option.text = "💻 " + client.name + " (" + client.id + ")"; } else { option.value = client; option.text = "💻 Cliente (" + client + ")"; } select.appendChild(option); }); const idExists = clients.some(c => (typeof c === 'object' ? c.id : c) === currentVal); if (idExists) select.value = currentVal; }
+        function toggleStreaming() {
+            if (!getSelectedClient()) return alert("Selecciona un cliente");
+            const btn = document.getElementById('btn-stream');
+            if (!isStreaming) { isStreaming=true; sendCommand('START_STREAM'); updateStreamBtn(); } 
+            else { isStreaming=false; sendCommand('STOP_STREAM'); stopStreamingUI(); }
+        }
+
+        function updateStreamBtn() {
+            const btn = document.getElementById('btn-stream');
+            if(isStreaming) { btn.classList.replace('bg-green-600', 'bg-red-600'); btn.querySelector('span').textContent="DETENER VER CLIENTE"; }
+            else { btn.classList.replace('bg-red-600', 'bg-green-600'); btn.querySelector('span').textContent="VER CLIENTE"; }
+        }
+
+        function stopStreamingUI() { 
+            isStreaming = false;
+            document.getElementById('remote-screen').classList.add('hidden'); 
+            document.getElementById('placeholder-screen').classList.remove('hidden'); 
+            updateStreamBtn();
+        }
+        
+        function updateScreen(data) {
+            if(!isStreaming) return;
+            const img = document.getElementById('remote-screen');
+            if (img.classList.contains('hidden')) { img.classList.remove('hidden'); document.getElementById('placeholder-screen').classList.add('hidden'); }
+            img.src = "data:image/jpeg;base64,"+data;
+            const now = Date.now();
+            const delta = now - lastFrameTime;
+            if (delta > 0) document.getElementById('fps-counter').textContent = Math.round(1000 / delta) + " FPS";
+            lastFrameTime = now;
+        }
+
+        function sendCommand(cmd) { ws.send(JSON.stringify({ action: 'send-command', target: getSelectedClient(), command: cmd })); }
         function getSelectedClient() { return document.getElementById('client-select').value; }
-        function sendCommand(cmd) { const target = getSelectedClient(); if (!target) return alert("Selecciona un cliente primero"); ws.send(JSON.stringify({ action: 'send-command', target: target, command: cmd })); }
-        function sendChat() { const input = document.getElementById('chat-msg'); const msg = input.value.trim(); if (msg) { sendCommand('CHAT:' + msg); addChatMessage("Yo", msg); input.value = ''; } }
-        function addChatMessage(from, msg) { const container = document.getElementById('chat-history'); const div = document.createElement('div'); const isMe = from === "Yo"; div.className = `p-2 rounded text-xs max-w-[90%] ${isMe ? 'bg-blue-900/50 ml-auto border border-blue-800' : 'bg-slate-800 border border-slate-700'}`; div.innerHTML = `<strong class="${isMe ? 'text-blue-400' : 'text-orange-400'} block mb-1">${from}</strong><span class="text-slate-200">${msg}</span>`; container.appendChild(div); container.scrollTop = container.scrollHeight; }
-        function blockWebsite() { const url = document.getElementById('website-url').value; if(url) sendCommand('BLOCK_WEBSITE:' + url); }
-        function unblockWebsite() { const url = document.getElementById('website-url').value; if(url) sendCommand('UNBLOCK_WEBSITE:' + url); }
-        function log(source, msg) { const container = document.getElementById('logs'); const div = document.createElement('div'); const time = new Date().toLocaleTimeString([], {hour12: false}); div.innerHTML = `<span class="text-slate-500">[${time}]</span> <span class="text-blue-400 font-bold">${source}:</span> ${msg}`; container.appendChild(div); container.scrollTop = container.scrollHeight; }
-        function downloadFile(filename, base64Data) { const link = document.createElement('a'); link.href = 'data:application/octet-stream;base64,' + base64Data; link.download = filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); }
-        function sendFile() { const fileInput = document.getElementById('file-upload'); const file = fileInput.files[0]; const target = getSelectedClient(); if (!file) return; if (!target) { alert("Selecciona un cliente primero"); fileInput.value = ""; return; } if (file.size > 5 * 1024 * 1024) { alert("El archivo es demasiado grande (Máx 5MB)"); fileInput.value = ""; return; } const reader = new FileReader(); reader.onload = function(e) { const base64Data = e.target.result.split(',')[1]; ws.send(JSON.stringify({ action: 'send-file', target: target, filename: file.name, data: base64Data })); log("Sistema", `Archivo enviado: ${file.name}`); addChatMessage("Yo", `📎 Archivo enviado: ${file.name}`); fileInput.value = ""; }; reader.readAsDataURL(file); }
-        function onClientChange() { stopStreamingUI(); const img = document.getElementById('remote-screen'); img.src = ""; img.classList.add('hidden'); document.getElementById('placeholder-screen').classList.remove('hidden'); document.getElementById('placeholder-text').textContent = "Esperando transmisión"; renderClientState(); }
-        function getClientState(clientId) { if (!clientId) return null; if (!clientStates[clientId]) { clientStates[clientId] = { sites: {}, security: { input: false, ping: false } }; } return clientStates[clientId]; }
+        
+        function updateStatus(c) { 
+            const btn = document.getElementById('btn-connect');
+            document.getElementById('connection-status').innerHTML = c ? '<span class="text-emerald-500">Conectado</span>' : '<span class="text-red-500">Desconectado</span>'; 
+            btn.textContent = c ? "DESCONECTAR" : "CONECTAR";
+            btn.className = c ? "text-red-400 hover:text-red-300 font-bold text-sm uppercase tracking-wider transition-colors" : "text-blue-400 hover:text-blue-300 font-bold text-sm uppercase tracking-wider transition-colors";
+        }
+        function updateClientList(l) {
+            const s = document.getElementById('client-select'); const v = s.value; s.innerHTML = '<option value="">-- Seleccionar --</option>';
+            l.forEach(c => { const o=document.createElement('option'); o.value=c.id; o.text=c.name; s.add(o); });
+            s.value = v;
+        }
+        function onClientChange() { stopStreamingUI(); isServerStreaming=false; resetServerStreamButton(); renderClientState(); } 
+        
+        function sendChat() { const i=document.getElementById('chat-msg'); if(i.value) { sendCommand('CHAT:'+i.value); addChatMessage("Yo", i.value); i.value=''; }}
+        function addChatMessage(u, m) { const d=document.createElement('div'); d.className="bg-slate-800 p-2 rounded text-xs mb-1"; d.innerHTML=`<b class="text-blue-400">${u}</b>: ${m}`; document.getElementById('chat-history').appendChild(d); }
+        function log(s, m) { const d=document.createElement('div'); d.innerHTML=`<span class="text-slate-500">[${new Date().toLocaleTimeString()}]</span> <b>${s}:</b> ${m}`; document.getElementById('logs').appendChild(d); }
+        function downloadFile(n, d) { const a=document.createElement('a'); a.href='data:application/octet-stream;base64,'+d; a.download=n; a.click(); }
+        function sendFile() { 
+            const f=document.getElementById('file-upload').files[0]; if(!f)return; 
+            const r=new FileReader(); r.onload=e=>{ ws.send(JSON.stringify({action:'send-file', target:getSelectedClient(), filename:f.name, data:e.target.result.split(',')[1]})); log("Sys", "Enviado"); }; 
+            r.readAsDataURL(f); 
+        }
+        
+        function getClientState(clientId) { if (!clientId) return null; if (!clientStates[clientId]) clientStates[clientId] = { sites: {}, security: { input: false, ping: false } }; return clientStates[clientId]; }
         function renderClientState() { const clientId = getSelectedClient(); const state = getClientState(clientId); if (!state) { document.getElementById('blocked-sites-list').innerHTML = '<li id="empty-list-msg" class="text-slate-600 italic text-center py-2">Selecciona un cliente</li>'; resetSecurityButtons(); return; } renderSitesList(state.sites); updateSecurityButtons(state.security); }
         function setSecurity(type, blocked) { const clientId = getSelectedClient(); if (!clientId) return alert("Selecciona un cliente"); const state = getClientState(clientId); if (type === 'input') { sendCommand(blocked ? 'BLOCK_INPUT' : 'UNBLOCK_INPUT'); state.security.input = blocked; } else if (type === 'ping') { sendCommand(blocked ? 'BLOCK_PING' : 'ALLOW_PING'); state.security.ping = blocked; } updateSecurityButtons(state.security); }
-        function updateSecurityButtons(securityState) { const btnBlockInput = document.getElementById('btn-block-input'); const btnUnlockInput = document.getElementById('btn-unblock-input'); const btnBlockPing = document.getElementById('btn-block-ping'); const btnAllowPing = document.getElementById('btn-allow-ping'); const reset = (btn) => { btn.className = btn.className.replace('btn-active-red', '').replace('btn-active-green', '').replace('btn-dimmed', ''); }; [btnBlockInput, btnUnlockInput, btnBlockPing, btnAllowPing].forEach(reset); if (securityState.input) { btnBlockInput.classList.add('btn-active-red'); btnUnlockInput.classList.add('btn-dimmed'); } else { btnUnlockInput.classList.add('btn-active-green'); btnBlockInput.classList.add('btn-dimmed'); } if (securityState.ping) { btnBlockPing.classList.add('btn-active-red'); btnAllowPing.classList.add('btn-dimmed'); } else { btnAllowPing.classList.add('btn-active-green'); btnBlockPing.classList.add('btn-dimmed'); } }
-        function resetSecurityButtons() { const btnBlockInput = document.getElementById('btn-block-input'); const btnUnlockInput = document.getElementById('btn-unblock-input'); const btnBlockPing = document.getElementById('btn-block-ping'); const btnAllowPing = document.getElementById('btn-allow-ping'); const reset = (btn) => { btn.className = btn.className.replace('btn-active-red', '').replace('btn-active-green', '').replace('btn-dimmed', ''); }; [btnBlockInput, btnUnlockInput, btnBlockPing, btnAllowPing].forEach(reset); }
+        function updateSecurityButtons(securityState) { const btns = ['btn-block-input', 'btn-unblock-input', 'btn-block-ping', 'btn-allow-ping'].map(id => document.getElementById(id)); btns.forEach(btn => btn.className = btn.className.replace('btn-active-red', '').replace('btn-active-green', '').replace('btn-dimmed', '')); if (securityState.input) { btns[0].classList.add('btn-active-red'); btns[1].classList.add('btn-dimmed'); } else { btns[1].classList.add('btn-active-green'); btns[0].classList.add('btn-dimmed'); } if (securityState.ping) { btns[2].classList.add('btn-active-red'); btns[3].classList.add('btn-dimmed'); } else { btns[3].classList.add('btn-active-green'); btns[2].classList.add('btn-dimmed'); } }
+        function resetSecurityButtons() { const btns = ['btn-block-input', 'btn-unblock-input', 'btn-block-ping', 'btn-allow-ping'].map(id => document.getElementById(id)); btns.forEach(btn => btn.className = btn.className.replace('btn-active-red', '').replace('btn-active-green', '').replace('btn-dimmed', '')); }
         function addAndBlockSite() { const clientId = getSelectedClient(); if (!clientId) return alert("Selecciona un cliente"); const inp = document.getElementById('website-url'); const url = inp.value.trim(); if(url) { sendCommand('BLOCK_WEBSITE:' + url); const state = getClientState(clientId); state.sites[url] = true; renderSitesList(state.sites); inp.value = ''; } }
         function manualUnblockSite() { const clientId = getSelectedClient(); if (!clientId) return alert("Selecciona un cliente"); const inp = document.getElementById('website-url'); const url = inp.value.trim(); if(url) { sendCommand('UNBLOCK_WEBSITE:' + url); const state = getClientState(clientId); state.sites[url] = false; renderSitesList(state.sites); inp.value = ''; } }
         function toggleSiteStatus(url) { const clientId = getSelectedClient(); if (!clientId) return; const state = getClientState(clientId); const isBlocked = state.sites[url]; if (isBlocked) { sendCommand('UNBLOCK_WEBSITE:' + url); state.sites[url] = false; } else { sendCommand('BLOCK_WEBSITE:' + url); state.sites[url] = true; } renderSitesList(state.sites); }
         function renderSitesList(sitesMap) { const list = document.getElementById('blocked-sites-list'); list.innerHTML = ''; if (!sitesMap || Object.keys(sitesMap).length === 0) { list.innerHTML = '<li id="empty-list-msg" class="text-slate-600 italic text-center py-2">Ningún sitio agregado</li>'; return; } for (const [url, isBlocked] of Object.entries(sitesMap)) { const li = document.createElement('li'); li.className = "bg-slate-800 rounded p-2 flex justify-between items-center border border-slate-700"; const statusColor = isBlocked ? "text-red-400" : "text-green-400"; const icon = isBlocked ? "fa-lock" : "fa-lock-open"; const btnText = isBlocked ? "Desbloquear" : "Bloquear"; const btnClass = isBlocked ? "bg-emerald-900 text-emerald-200 border-emerald-700 hover:bg-emerald-800" : "bg-red-900 text-red-200 border-red-700 hover:bg-red-800"; li.innerHTML = `<div class="flex items-center overflow-hidden"><i class="fas ${icon} mr-2 ${statusColor} text-xs"></i><span class="truncate max-w-[100px] ${statusColor}" title="${url}">${url}</span></div><button onclick="toggleSiteStatus('${url}')" class="text-[10px] border px-2 py-1 rounded transition ${btnClass}">${btnText}</button>`; list.appendChild(li); } }
     </script>
 </body>
+>>>>>>> prueba
 </html>
